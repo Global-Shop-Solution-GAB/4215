@@ -1,0 +1,608 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Select an .XML File")
+gui.Form1..size(4605,2070)
+gui.Form1..minx(0)
+gui.Form1..miny(0)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(False)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.lblxmlParse.create(label,"XML Parse File",True,1935,405,1,200,200,True,0,Arial,8,-2147483633,0)
+gui.Form1.lblxmlParse.defaultvalue("")
+gui.Form1.lblxmlParse.controlgroup(0)
+gui.Form1.cmdOk.create(button)
+gui.Form1.cmdOk.caption("Ok")
+gui.Form1.cmdOk.visible(True)
+gui.Form1.cmdOk.size(855,375)
+gui.Form1.cmdOk.zorder(0)
+gui.Form1.cmdOk.position(200,900)
+gui.Form1.cmdOk.enabled(True)
+gui.Form1.cmdOk.fontname("Arial")
+gui.Form1.cmdOk.fontsize(8)
+gui.Form1.cmdOk.event(click,cmdok_click)
+gui.Form1.cmdOk.defaultvalue("")
+gui.Form1.cmdOk.controlgroup(0)
+gui.Form1.txtFilePath.create(textbox,"",True,3510,300,0,185,445,True,0,Arial,8,-2147483643,1)
+gui.Form1.txtFilePath.defaultvalue("")
+gui.Form1.txtFilePath.controlgroup(0)
+gui.Form1.cmdFileBrowse.create(button)
+gui.Form1.cmdFileBrowse.caption("^")
+gui.Form1.cmdFileBrowse.visible(True)
+gui.Form1.cmdFileBrowse.size(375,375)
+gui.Form1.cmdFileBrowse.zorder(0)
+gui.Form1.cmdFileBrowse.position(3765,405)
+gui.Form1.cmdFileBrowse.enabled(True)
+gui.Form1.cmdFileBrowse.fontname("Arial")
+gui.Form1.cmdFileBrowse.fontsize(8)
+gui.Form1.cmdFileBrowse.event(click,cmdfilebrowse_click)
+gui.Form1.cmdFileBrowse.defaultvalue("")
+gui.Form1.cmdFileBrowse.controlgroup(0)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Variable.UDT.uXML.Define("PART",String)
+Variable.UDT.uXML.Define("SEQUENCE",String)
+Variable.UDT.uXML.Define("PARTNO",String)
+Variable.UDT.uXML.Define("COUNT",Float)
+Variable.UDT.uXML.Define("LEVEL",String)
+Variable.UDT.uXML.Define("DESCRIPTION",String)
+Variable.UDT.uXML.Define("REVISION",String)
+Variable.UDT.uXML.Define("UNIT",String)
+Variable.UDT.uXML.Define("CATEGORY",String)
+Variable.UDT.uXML.Define("SOURCE",String)
+Variable.UDT.uXML.Define("LENGTH",String)
+Variable.UDT.uXML.Define("VOLUME",String)
+Variable.UDT.uXML.Define("SurfaceArea",String)
+Variable.UDT.uXML.Define("Weight",Float)
+Variable.UDT.uXML.Define("GSS_RM_PN",String)
+Variable.UDT.uXML.Define("GSS_RM_QTY",Float)
+Variable.UDT.uXML.Define("GSS_RM_UOM",String)
+Variable.UDT.uXML.Define("GSS_RM_DESC",String)
+Variable.UDT.uXML.Define("GSS_RM_SEQ",String)
+Variable.UDT.uXML.Define("GSS_RM_SOURCE",String)
+Variable.uGlobal.uXML.Declare("uXML")
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'This will be a GAB Script that will run from a custom menu item that will allow the user to navigate to the xml file that needs to be uploaded. From here the xml will be parsed and the necessary Bill of Materials will be uploaded to Global Shop
+'Coded by: WAW
+'Sept. 19, 2016
+
+'open connection
+F.odbc.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+'display the form
+Gui.Form1..Visible(true)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4215_CAD_BOM_IMPORT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.Main.End
+
+program.sub.cmdfilebrowse_click.start
+F.Intrinsic.Control.SetErrorHandler("Form_UnLoad_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+Variable.Local.sFile.Declare(String)
+Variable.Local.sDir.Declare(String)
+
+F.Intrinsic.String.Build("{0}\Select File",V.Caller.FilesDir,V.Local.sDir)
+Function.Intrinsic.UI.ShowOpenFileDialog("","xml|*xml",Variable.Local.sDir,Variable.Local.sFile)
+Function.Intrinsic.Control.If(Variable.Local.sFile,<>,"***CANCEL***")
+	Gui.Form1.txtFilePath.Text(Variable.Local.sFile)
+Function.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Form_UnLoad_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4215_CAD_BOM_IMPORT.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+program.sub.cmdfilebrowse_click.End
+
+program.sub.cmdok_click.start
+F.Intrinsic.Control.SetErrorHandler("Form_UnLoad_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sFile.Declare(String)
+
+'set FQN path from the textbox.
+V.Local.sFile.Set(V.Screen.Form1!txtFilePath.Text)
+
+Function.Intrinsic.Control.If(V.Local.sFile.Trim,<>,"")
+	Gui.Form1..Visible(False)
+	'call load xml sub.
+	Function.Intrinsic.Control.CallSub(Load_xml,"FQN",V.Local.sFile.Trim)
+F.Intrinsic.Control.Else
+	'force the user to select an .xml file	
+	F.Intrinsic.UI.Msgbox("Please select an XML file")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Form_UnLoad_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4215_CAD_BOM_IMPORT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+program.sub.cmdok_click.End
+
+program.sub.form1_unload.start
+F.Intrinsic.Control.SetErrorHandler("Form_UnLoad_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+'close connection to the database
+F.ODBC.Connection!conx.Close
+
+'end the program
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Form_UnLoad_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4215_CAD_BOM_IMPORT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+program.sub.form1_unload.End
+
+Program.Sub.Load_XML.Start
+F.Intrinsic.Control.SetErrorHandler("Load_XML_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sQuery.Declare(String)
+V.Local.sXMLFQN.Declare(String)
+V.Local.sRet.Declare(String)
+V.Local.bEOFR.Declare(Boolean)
+V.Local.bEOFV.Declare(Boolean)
+V.Local.iUB.Declare(Long)
+V.Local.sVal.Declare(String)
+V.Local.squery2.Declare(String)
+V.Local.sord.Declare(String)
+V.Local.ssql.Declare(String)
+V.Local.ilessone.Declare(Long)
+V.Local.spndescsourcesql.declare(String)
+V.Local.bParent.Declare(Boolean)
+
+V.uGlobal.uXML.Redim(-1,-1)
+
+V.Local.sXMLFQN.Set(V.Args.FQN)
+
+'let them know we are running.
+F.Intrinsic.UI.InvokeWaitDialog("Reading XML File....")
+
+'Load XMl
+'F.Global.XML.LoadDocument("XML",V.Local.sXMLFQN,False,False,False,False)
+F.Global.XML.LoadDocument("XML",V.Local.sXMLFQN,False,False,False,False)
+
+'Set our 2 XML queries.
+V.Local.sQuery.Set("//Rows/Row/Values/NameValuePair/Name")
+'V.Local.sQuery2.Set("//Rows/Row/Values")
+F.Global.XML.Query("XML","Rows",V.Local.sQuery,False)
+
+V.Local.sQuery.Set("//Rows/Row/Values/NameValuePair/Value")
+F.Global.XML.Query("XML","Value",V.Local.sQuery,False)
+
+'loop through the file and start setting fields within the UDT
+F.Intrinsic.Control.DoUntil(V.Local.bEOFR,=,True)
+
+	'Rows xquery just gives us the name of the thing we need to set.
+	F.Global.XML.ReadNodeSetValue("XML","Rows","text",V.Local.sRet.trim)
+
+	'Value xquery gives us the name and the value of the value.
+	F.Global.XML.ReadNodeSetValue("XML","Value","text",V.Local.sVal.Trim)
+'F.Intrinsic.Debug.Stop
+	'Increase our UDT
+	F.Intrinsic.Control.If(V.Local.sRet.UCase,=,"PARENT")
+		F.Intrinsic.Control.If(V.uGlobal.uXML.UBound,=,-1)
+			V.uGlobal.uXML.Redim(0,0)
+			V.Local.iUB.Set(0)
+		Function.Intrinsic.Control.Else
+			F.Intrinsic.Math.Add(V.uGlobal.uxml.UBound,1,V.Local.iUB)
+			V.uGlobal.uxml.RedimPreserve(0,V.Local.iUB)
+		Function.Intrinsic.Control.EndIf
+		V.Local.bParent.set(True)
+	Function.Intrinsic.Control.Else
+		V.Local.bParent.set(False)
+	Function.Intrinsic.Control.EndIf
+
+	'go through the file and begin setting UDT fields
+	Function.Intrinsic.Control.SelectCase(V.Local.sRet.UCase)
+		Function.Intrinsic.Control.Case("PARENT")
+			V.uGlobal.uXML(v.Local.iUB)!PART.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("SEQUENCE")
+			V.uGlobal.uXML(v.Local.iUB)!Sequence.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("PARTNO")
+			V.uGlobal.uXML(v.Local.iUB)!PARTNO.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("COUNT")
+			V.uGlobal.uXML(v.Local.iUB)!Count.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("LEVEL")
+			V.uGlobal.uXML(v.Local.iUB)!LEVEL.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("DESCRIPTION")
+			V.uGlobal.uXML(v.Local.iUB)!DESCRIPTION.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("REVISION")
+			V.uGlobal.uXML(v.Local.iUB)!REVISION.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("UNIT")
+			F.Intrinsic.Control.If(V.Local.bParent,=,True)
+				V.uGlobal.uXML(v.Local.iUB)!UNIT.Set("EA")
+			F.Intrinsic.Control.else
+				V.uGlobal.uXML(v.Local.iUB)!UNIT.Set(V.Local.sVal)
+			F.Intrinsic.Control.EndIf
+		Function.Intrinsic.Control.Case("CATEGORY")
+			V.uGlobal.uXML(v.Local.iUB)!CATEGORY.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("SOURCE")
+			V.uGlobal.uXML(v.Local.iUB)!SOURCE.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("LENGTH")
+			V.uGlobal.uXML(v.Local.iUB)!LENGTH.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("VOLUME")
+			V.uGlobal.uXML(v.Local.iUB)!VOLUME.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("SURFACEAREA")
+			F.Intrinsic.Math.Div(V.Local.sVal.Float,144,V.Local.sVal.Float)
+			V.uGlobal.uXML(v.Local.iUB)!SurfaceArea.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("WEIGHT")
+			V.uGlobal.uXML(v.Local.iUB)!Weight.Set(V.Local.sVal)
+		Function.Intrinsic.Control.Case("GSS_RM_PN")
+
+		Function.Intrinsic.Control.Case("GSS_RM_QTY")
+
+		Function.Intrinsic.Control.Case("GSS_RM_UOM")
+
+			'check to see if qty is blank if so set as 0
+			F.Intrinsic.Control.If(V.Local.sVal,=,"")
+				V.uGlobal.uXML(v.Local.iUB)!GSS_RM_QTY.Set(0)
+			F.Intrinsic.Control.EndIf
+			' SF, quantity will be the surface area node divided by 2
+			F.Intrinsic.Control.If(V.Local.sVal.UCase,=,"SF")
+				F.Intrinsic.Control.If(V.uGlobal.uXML(v.Local.iUB)!SurfaceArea,<>,"")
+
+					F.Intrinsic.Math.Div(V.uGlobal.uXML(v.Local.iUB)!SurfaceArea,2,V.uGlobal.uXML(v.Local.iUB)!GSS_RM_QTY)
+				F.Intrinsic.Control.EndIf
+				'FT, quantity will be Length node
+			F.Intrinsic.Control.Elseif(V.Local.sVal.UCase,=,"FT")
+
+				V.uGlobal.uXML(v.local.iUB)!GSS_RM_QTY.Set(V.uGlobal.uXML(v.Local.iUB)!LENGTH)
+				'if LB, quantity will be coming from the weight node
+			F.Intrinsic.Control.Elseif(V.Local.sVal.UCase,=,"LB")
+				V.uGlobal.uXML(v.local.iub)!GSS_RM_QTY.Set(V.uGlobal.uXML(v.Local.iUB)!WEIGHT)
+				'if CF quantity will be coming from the volume node.
+			F.Intrinsic.Control.Elseif(V.Local.sVal.UCase,=,"CF")
+				V.uGlobal.uXML(v.local.iUB)!GSS_RM_QTY.Set(V.uGlobal.uXML(v.Local.iUB)!VOLUME)
+			F.Intrinsic.Control.ElseIf(V.Local.sVal.UCase,=,"EA")
+				V.uGlobal.uXML(V.Local.iUB)!GSS_RM_QTY.Set(1)
+			F.Intrinsic.Control.EndIf
+			V.uGlobal.uXML(v.Local.iUB)!GSS_RM_UOM.Set(V.Local.sVal)
+
+	Function.Intrinsic.Control.Case("MATERIAL")
+			' If GSS_RM_DESC is populated, the child part number will be determined by querying the GSS Inventory master Alternate Description 1 field. 1 single inventory record will be pulled. If multiple are found, only the first instance found will be used.
+			F.Intrinsic.Control.If(V.Local.sVal,<>,"")
+			F.Intrinsic.Control.andIf(V.Local.sVal,<>,"Refer to Bill of Material")
+			F.Intrinsic.String.Build("Select PART from v_BOM_ENG where DESCRIPTION  = '{0}'",V.Local.sVal,V.local.ssql)
+				F.ODBC.Connection!conx.OpenRecordsetRO("rst",V.local.ssql)
+				'check to see if eof is false
+				F.Intrinsic.Control.If(V.ODBC.conx!rst.EOF,=,False)
+					V.Local.sCond1.Declare(string)
+					V.Local.sOrds.Declare(string)
+					V.Local.sRMSeq.Declare(long)
+
+					F.Intrinsic.Variable.UDTMultiSeek(V.uGlobal.uXML!PARTNO,V.uGlobal.uXML(v.Local.iUB)!PARTNO,V.uGlobal.uXML!GSS_RM_PN,V.ODBC.conx!rst.FieldValTrim!PART,V.Local.sOrds)
+
+					F.Intrinsic.Control.If(V.local.sOrds.Trim,<>,"")
+						F.Intrinsic.String.Split(V.local.sOrds,"*!*",V.local.sOrds)
+						f.Intrinsic.Math.Add(V.local.sRet.UBound,1,V.Local.sRMSeq)
+					f.Intrinsic.Control.else
+						V.Local.sRMSeq.Set(1)
+					F.Intrinsic.Control.EndIf
+
+						'ranjit-------------------------------------
+					V.uGlobal.uXML(v.Local.iUB)!GSS_RM_SEQ.Set(V.Local.sRMSeq)
+					V.uGlobal.uXML(v.Local.iUB)!GSS_RM_PN.Set(V.ODBC.conx!rst.FieldValTrim!PART)
+					V.uGlobal.uXML(v.Local.iUB)!GSS_RM_DESC.Set(V.Local.sVal)
+					'------------------------------------------------------------------------------
+
+					'If a matching record is found we will use the inventory Part Number, Description and Source value within that Inventory master record.
+'					F.Intrinsic.String.Build("Select INVENTORY_MSTR.PART, INVENTORY_MSTR.DESCRIPTION, INVENTORY_MST2.CODE_SOURCE from INVENTORY_MSTR inner join INVENTORY_MST2 on INVENTORY_MSTR.PART = INVENTORY_MST2.PART where INVENTORY_MSTR.PART = '{0}'",V.uglobal.uXML(v.local.iUB)!PART,V.local.spndescsourcesql)
+					F.Intrinsic.String.Build("Select Source from v_BOM_MSTR where PART = '{0}'",V.uGlobal.uXML(v.Local.iUB)!GSS_RM_PN,V.local.spndescsourcesql)
+					F.ODBC.Connection!conx.OpenRecordsetRO("rst2",V.local.spndescsourcesql)
+					'check to see if eof is false
+					F.Intrinsic.Control.If(V.ODBC.conx!rst2.EOF,=,False)
+						'set the partno and description and source
+'						ranjit	
+						V.uGlobal.uXML(v.Local.iUB)!GSS_RM_SOURCE.Set(V.ODBC.conx!rst2.FieldValTrim!SOURCE)
+
+					F.Intrinsic.Control.EndIf
+					F.ODBC.conx!rst2.Close
+					'If we do not find a matching Inventory record we will not create a child on this BOM.
+				F.Intrinsic.Control.Else
+					'delete the blank last row
+'					f.Intrinsic.Variable.udtflagordinal(v.uGlobal.uXML,True,v.local.iUB)
+				F.Intrinsic.Control.EndIf
+				F.odbc.conx!rst.close
+'				V.uGlobal.uXML(v.Local.iUB)!GSS_RM_DESC.Set(V.Local.sVal)
+			F.Intrinsic.Control.EndIf
+		'warn the user something wasn't found
+		Function.Intrinsic.Control.CaseElse
+		Function.Intrinsic.Debug.SetLA("Name: ",V.Local.sRet.UCase," not found within Select statement. With Value: ",V.Local.sVal)
+	Function.Intrinsic.Control.EndSelect
+'move to the next
+F.Global.XML.Next("XML","Rows",V.Local.bEOFR)
+F.Global.XML.Next("XML","Value",V.Local.bEOFV)
+
+F.Intrinsic.Control.Loop
+
+'call the uploadBOM subroutine
+F.Intrinsic.Control.CallSub(Uploadbom)
+
+'close dialog
+F.Intrinsic.UI.CloseWaitDialog
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Load_XML_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4215_CAD_BOM_IMPORT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Load_XML.End
+
+Program.Sub.UploadBOM.Start
+F.Intrinsic.Control.SetErrorHandler("UploadBOM_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sParents.Declare(String)
+V.Local.sComponents.Declare(String)
+V.Local.iForEachParent.Declare(Long)
+V.Local.iForEachComponent.Declare(Long)
+V.Local.iSeq.Declare(String)
+V.Local.sBOMText.Declare(String)
+V.Local.sBOMFile.Declare(String)
+V.Local.sCommentText.Declare(String)
+V.Local.sCommentFile.Declare(String)
+V.Local.sCutListText.Declare(String)
+V.Local.iWait.Declare(Long)
+V.Local.iFor.Declare(Long)
+V.Local.iVal.Declare(Long)
+V.Local.sBOMBkp.Declare(String)
+V.Local.sCompare.Declare(String)
+V.Local.sParentString.Declare(String)
+V.Local.bInString.Declare(Boolean)
+V.Local.sParentLevel.Declare(String)
+V.Local.sPrevParent.Declare(String)
+V.Local.sPrevLevel.Declare(String)
+V.Local.sparam.Declare(String)
+
+' delete blank part lines
+F.Intrinsic.Variable.UDTMultiFlag(V.uGlobal.uXML!PartNo,"")
+F.Intrinsic.Variable.UDTDeleteFlagged(V.uGlobal.uXML)
+F.Intrinsic.Variable.UDTMultiQuickSort(V.uGlobal.uXML!Part,False,V.uGlobal.uXML!Sequence,False)
+
+' for each Parent, write the line for the Parent, then find the components
+F.Intrinsic.Control.For(V.Local.iFor,V.uGlobal.uXML.LBound,V.uGlobal.uXML.UBound,1)
+
+	' to prevent error
+	F.Intrinsic.Control.If(V.uGlobal.uXML(v.Local.iFor)!Part,=,V.uGlobal.uXML(v.Local.iFor)!PartNo)
+		F.Intrinsic.String.GSSPartString(V.uGlobal.uXML(V.Local.iFor)!PART,V.uGlobal.uXML(V.Local.iFor)!REVISION,V.Local.sParentString)
+		F.Intrinsic.Variable.UDTMultiSeekSet(V.uGlobal.uXML!PART,V.uGlobal.uXML(V.Local.iFor)!PART,V.uGlobal.uXML!PART,V.Local.sParentString)
+		V.uGlobal.uXML(v.Local.iFor)!Sequence.Set("0000")
+	F.Intrinsic.Control.EndIf
+
+	' wait dialog
+	F.Intrinsic.Math.Add(V.Local.iWait,1,V.Local.iWait)
+	F.Intrinsic.UI.ChangeWaitStatus("Loading BOM",V.Local.iWait,0,V.Local.sParents.UBound)
+	F.Intrinsic.Control.CallSub(Buildcomponenetstring,"FOR",V.Local.iFor,"SEQ",V.Local.iSeq)
+	F.Intrinsic.String.Build("{0}{1}{2}",V.Local.sBomText,V.Args.LINE,V.Ambient.NewLine,V.Local.sBOMText)
+
+	F.Intrinsic.Control.Label("NEXT")
+F.Intrinsic.Control.Next(V.Local.iFor)
+
+'F.Intrinsic.Debug.Stop
+
+' Write text to the files, and send back filenames, to be loaded
+F.Intrinsic.String.Build("{0}\{1}",V.Caller.FilesDir,"xbom.csv",V.Local.sBOMFile)
+F.Intrinsic.File.String2File(V.Local.sBOMFile,V.Local.sBOMText)
+
+F.Global.General.CallWrapperSync(50,"XUPLBOMG")
+
+'addRV
+F.Intrinsic.Variable.AddRV("BOM",V.Local.sBOMFile)
+
+F.Intrinsic.UI.Msgbox("BOM export complete.")
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("UploadBOM_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4215_CAD_BOM_IMPORT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.UploadBOM.End
+
+Program.Sub.BuildComponenetString.Start
+F.Intrinsic.Control.SetErrorHandler("BuildComponenetString_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sLine.Declare(String)
+V.Local.sParent.Declare(String)
+V.Local.sPart.Declare(String)
+V.Local.sSeq.Declare(String)
+V.Local.sDescription.Declare(String)
+V.Local.sCount.Declare(String)
+V.Local.sUM.Declare(String)
+V.Local.sCategory.Declare(String)
+V.Local.sSource.Declare(String)
+V.Local.sMisc.Declare(String)
+V.Local.iFor.Declare(Long)
+V.Local.sRev.Declare(String)
+V.Local.sParentRev.Declare(String)
+V.Local.schild.Declare(String)
+
+V.Local.sqty.Declare(String)
+V.Local.spno.Declare(String)
+V.Local.sPNORev.Declare(String)
+V.Local.suom.Declare(String)
+V.Local.sDesc.Declare(String)
+V.Local.spad.Declare(String)
+V.Local.sRMLine.Declare(String)
+V.Local.sRMParent.Declare(String)
+
+V.Local.iFor.Set(V.Args.FOR)
+
+' pad Parent to 20 char length
+F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!Part," ",20,V.Local.sParent)
+F.Intrinsic.String.Left(V.Local.sParent,20,V.Local.sParent)
+'Get the parent rev
+F.Intrinsic.String.Right(V.Local.sParent,3,V.Local.sParentRev)
+' pad Seq to 4 char length
+'F.Intrinsic.String.LPad(V.Args.SEQ,"0",4,V.Local.sSeq)
+'F.Intrinsic.String.LPad(V.uGlobal.uXML(v.Local.iFor)!Sequence,"0",4,V.Local.sseq)
+' pad count to 16 char length
+'F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!Count," ",16,V.Local.sCount)
+' pad part ro 20 char length
+F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!PartNo," ",17,V.Local.sPart)
+
+F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!REVISION," ",3,V.Local.sRev)
+
+'put the part and rev together
+F.Intrinsic.String.GSSPartString(V.Local.sPart.Trim,V.Local.sRev.Trim,V.Local.sPart)
+
+' make sure UM is just 2 char
+F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!UNIT," ",2,V.Local.sUM)
+
+' description will be "UPLOADED, but padded to 30 char
+F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!Description," ",30,V.Local.sDescription)
+' Rev
+'F.Intrinsic.String.Right(V.Local.sParent,3,V.Local.sRev)
+V.Local.sPad.Set("")
+F.Intrinsic.String.RPad(V.Local.sPad," ",113,V.Local.sPad)
+
+'F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!Revision," ",3,V.Local.sRev)
+' make sure Category is 1 char
+F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!Category," ",1,V.Local.sCategory)
+
+'If the category is N it actually needs to be blank
+F.Intrinsic.Control.If(V.Local.sCategory,=,"N")
+	V.Local.sCategory.Set(" ")
+F.Intrinsic.Control.EndIf
+
+' make sure Source is 1 char
+F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!Source," ",1,V.Local.sSource)
+
+'build parent for new partno with sequence 0 means prt & partno will be same
+
+'check to see if we have another line for a child
+F.Intrinsic.Control.If(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_PN,<>,"")
+
+	f.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!PartNo," ",17,V.Local.sRMParent)
+	F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!REVISION," ",3,V.Local.sRev)
+'put the part and rev together
+	F.Intrinsic.String.GSSPartString(V.Local.sRMParent.Trim,V.Local.sRev.Trim,V.Local.sRMParent)
+
+	F.Intrinsic.String.Build("{0},{1},{2},{3},,,,,,,,,{4},,,,,,,,,{5},{6},,{7},{8}",V.Local.sParent,V.Local.sPart,V.Local.sCount,V.Local.sDescription,V.Local.sParentRev,V.Local.sRev,V.Local.sUM,V.Local.sSource,V.Local.sCategory,V.Local.sLine)
+	' GSS_RM_SEQ = 1 means top level
+'	F.Intrinsic.String.Build("{0}{1}{2}{3}{4}{5}{6}{7}{8}",V.Local.sParent,V.Local.sSeq,V.Local.sCount,V.Local.sPart,V.Local.sUM,V.Local.sDescription,V.Local.sPad,V.Local.sCategory,V.Local.sSource,V.Local.sLine)
+	F.Intrinsic.Control.If(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_SEQ,=,"1")
+	'build orginal line
+		'make orginal as parent
+		F.Intrinsic.String.Build("{0},{1},{2},{3},,,,,,,,,{4},,,,,,,,,{5},{6},,{7},{8}",V.Local.sRMParent,V.Local.sRMParent,V.Local.sCount,V.Local.sDescription,V.Local.sRev,V.Local.sRev,V.Local.sUM,V.Local.sSource,V.Local.sCategory,V.Local.sRMLine)
+		f.Intrinsic.Control.If(V.Local.sRMLine,<>,"")
+			F.Intrinsic.String.Build("{0}{1}{2}",V.Local.sLine,V.Ambient.NewLine,V.Local.sRMLine,V.Local.sRMLine)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+
+	V.Local.sqty.Set(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_QTY.Trim)
+	' pad count to 16 char length
+'	F.Intrinsic.String.RPad(V.local.sqty," ",16,V.Local.sqty)
+
+	V.Local.spno.Set(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_PN.Trim)
+'	 pad part ro 20 char length
+	F.Intrinsic.String.RPad(V.local.spno," ",20,V.Local.spno)
+	'Get the rev
+	F.Intrinsic.String.Right(V.Local.spno,3,V.Local.sPNORev)
+	V.Local.suom.Set(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_UOM.Trim)
+	' make sure UM is just 2 char
+	F.Intrinsic.String.RPad(V.local.suom," ",2,V.Local.sUoM)
+	V.Local.sDesc.Set(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_DESC.Trim)
+	' description will be "UPLOADED, but padded to 30 char
+	F.Intrinsic.String.RPad(V.local.sdesc," ",30,V.Local.sDesc)
+
+	F.Intrinsic.String.LPad(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_SEQ,"0",4,V.Local.sSeq)
+
+	F.Intrinsic.String.RPad(V.uGlobal.uXML(v.Local.iFor)!GSS_RM_SOURCE," ",1,V.Local.sSource)
+
+	F.Intrinsic.String.Build("{0},{1},{2},{3},,,,,,,,,{4},,,,,,,,,{5},{6},,{7},{8}",V.Local.sRMParent,V.Local.spno,V.local.sqty,V.local.sDesc,V.Local.sRev,V.Local.sPNORev,V.Local.suom,V.Local.sSource,V.Local.sCategory,V.Local.sLine)
+
+	f.Intrinsic.Control.If(V.Local.sRMLine,<>,"")
+		F.Intrinsic.String.Build("{0}{1}{2}",V.Local.sRMLine,V.Ambient.NewLine,V.Local.sLine,V.Local.sLine)
+	f.Intrinsic.Control.endif
+
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Build("{0},{1},{2},{3},,,,,,,,,{4},,,,,,,,,{5},{6},,{7},{8}",V.Local.sParent,V.Local.sPart,V.Local.sCount,V.Local.sDescription,V.Local.sParentRev,V.Local.sRev,V.Local.sUM,V.Local.sSource,V.Local.sCategory,V.Local.sLine)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Variable.AddRV("LINE",V.Local.sLine)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("BuildComponenetString_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4215_CAD_BOM_IMPORT.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Form1_unload)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.BuildComponenetString.End
+
+Program.Sub.Comments.Start
+${$0$}$GCG_4125_CAD_BOM_IMPORT.$}$WAW$}$9/21/2016$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$Modification of ARC Project 1507 original program GCG_6963-2_Multi_MRP.gas
+This adds in the ability to save the Summary for later use.
+Program.Sub.Comments.End
+
